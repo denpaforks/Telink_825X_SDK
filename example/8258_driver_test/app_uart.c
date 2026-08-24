@@ -77,7 +77,7 @@ void app_uart_test_init(void)
 	WaitMs(2000);  //leave enough time for SWS_reset when power on
 
 	//note: dma addr must be set first before any other uart initialization! (confirmed by sihui)
-	uart_recbuff_init( (unsigned short *)&rec_buff, sizeof(rec_buff));
+	uart_recbuff_init((unsigned char *)&rec_buff, sizeof(rec_buff));
 
 	uart_gpio_set(UART_TX_PB1, UART_RX_PB0);// uart tx/rx pin set
 

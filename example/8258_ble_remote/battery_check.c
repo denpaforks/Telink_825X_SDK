@@ -168,7 +168,7 @@ _attribute_ram_code_ void adc_vbat_detect_init(void)
 }
 
 
-_attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
+_attribute_ram_code_ void app_battery_power_check(u16 alram_vol_mv)
 {
 	u16 temp;
 	int i,j;

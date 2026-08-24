@@ -411,7 +411,7 @@ void user_init_normal(void)
 	////////////////// SPP initialization ///////////////////////////////////
 	//note: dma addr must be set first before any other uart initialization!
 	u8 *uart_rx_addr = (spp_rx_fifo_b + (spp_rx_fifo.wptr & (spp_rx_fifo.num-1)) * spp_rx_fifo.size);
-	uart_recbuff_init( (unsigned short *)uart_rx_addr, spp_rx_fifo.size);
+	uart_recbuff_init((unsigned char *)uart_rx_addr, spp_rx_fifo.size);
 
 	uart_gpio_set(UART_TX_PB1, UART_RX_PB0);
 
@@ -495,7 +495,7 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	//note: dma addr must be set first before any other uart initialization!
 
 	u8 *uart_rx_addr = (spp_rx_fifo_b + (spp_rx_fifo.wptr & (spp_rx_fifo.num-1)) * spp_rx_fifo.size);
-	uart_recbuff_init( (unsigned short *)uart_rx_addr, spp_rx_fifo.size);
+	uart_recbuff_init((unsigned char *)uart_rx_addr, spp_rx_fifo.size);
 
 
 	uart_gpio_set(UART_TX_PB1, UART_RX_PB0);

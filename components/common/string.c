@@ -146,6 +146,21 @@ int strcmp(const char* firstString, const char* secondString) {
 	return 1;
 }
 
+int strncmp(const char *firstString, const char *secondString, unsigned int length) {
+	while (length > 0 && *firstString == *secondString) {
+		if (*firstString == '\0') {
+			return 0;
+		}
+		++firstString;
+		++secondString;
+		--length;
+	}
+	if (length == 0) {
+		return 0;
+	}
+	return (unsigned char)*firstString - (unsigned char)*secondString;
+}
+
 int strxcmp(const char* firstString, const char* secondString) {
 	while (*firstString == *secondString) {
 		if (*firstString == '\0') {

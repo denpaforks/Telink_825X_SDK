@@ -187,7 +187,7 @@ void feature_phytest_init_normal(void)
 	#endif
 
 
-	uart_recbuff_init((unsigned short*)hci_rx_fifo_b, hci_rx_fifo.size);
+	uart_recbuff_init((unsigned char *)hci_rx_fifo_b, hci_rx_fifo.size);
 
 	#if (CLOCK_SYS_CLOCK_HZ == 16000000)
 		uart_init(9,13,PARITY_NONE, STOP_BIT_ONE); //baud rate: 115200

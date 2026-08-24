@@ -110,7 +110,7 @@ void main_loop ()
 	gpio_write(GPIO_PC3, 0); 
 	gpio_write(GPIO_PC4, 0); 
 	gpio_write(GPIO_PB4, 0); 
-	gpio_write(GPIO_PB5, 5); my_key_proocess();
+	gpio_write(GPIO_PB5, 1); my_key_proocess();
 }
 
 _attribute_ram_code_ void irq_handler(void)

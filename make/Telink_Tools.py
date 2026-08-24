@@ -56,6 +56,12 @@ RES_ERASE_FLASH = 'OK_03'
 RES_READ_MUID   = 'OK_04'
 RES_CHANGE_BAUD = 'OK_05'
 
+FLASH_SIZE = 0x80000
+FLASH_SECTOR_SIZE = 0x1000
+FIRMWARE_START = 0x4000
+MAX_FIRMWARE_SIZE = 0x2C000
+BOOT_MIRROR_START = 0x2C000
+
 
 def tl_open_port(port_name):
     _port = serial.serial_for_url(port_name)
@@ -98,8 +104,14 @@ def wait_result(_port, res, time_out = 200):
     return True
 
 def telink_flash_write(_port, addr, data):
+    if addr < 0 or not data:
+        return False
+
     cmd_len = len(data) + 5
-    if(addr < 0x4000): addr += 0x2C000
+    if addr < FIRMWARE_START:
+        addr += BOOT_MIRROR_START
+    if addr + len(data) > FLASH_SIZE:
+        return False
 
     error_c = 3
     while error_c > 0:
@@ -109,23 +121,30 @@ def telink_flash_write(_port, addr, data):
         error_c-=1
     return False
 
-def telink_flash_read(_port, addr, len_b):
+def telink_flash_read(_port, addr, len_b, timeout=1.0):
+    if addr < 0 or len_b < 1 or len_b > 255 or addr + len_b > FLASH_SIZE:
+        return False, b''
+
     uart_write(_port, struct.pack('>BHIB', CMD_READ_FLASH, 5, addr,len_b))
     time.sleep(0.01)
 
     data = bytes()
-    while True :
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
         if _port.inWaiting() > 0: data += _port.read_all()
-        if len(data) > len_b + 5: break
+        if len(data) >= len_b + len(RES_READ_FLASH): break
         time.sleep(0.01)
 
-    result = str(data[len_b:])
-    if  result.find(RES_READ_FLASH) == -1: return False , 0
-    else : return True , data[:len_b]
+    if len(data) < len_b + len(RES_READ_FLASH):
+        return False, b''
 
+    result = data[len_b:].decode('ascii', errors='ignore')
+    if result.find(RES_READ_FLASH) == -1: return False, b''
+    return True, data[:len_b]
 def telink_flash_erase(_port, addr, len_t):
-
-    if (addr + (len_t * 0x1000) ) > 0x80000: return False
+    if (addr < 0 or addr % FLASH_SECTOR_SIZE != 0 or len_t < 1 or len_t > 255 or
+            addr + (len_t * FLASH_SECTOR_SIZE) > FLASH_SIZE):
+        return False
 
     uart_write(_port, struct.pack('>BHIB', CMD_ERASE_FLASH, 5, addr, len_t))
 
@@ -189,12 +208,26 @@ def erase_flash(_port, args):
     else:
         print("\033[3;31mFail!\033[0m")
 
+def write_flash(_port, args):
+    try:
+        flash_addr = int(args.addr, 0)
+        data = bytes.fromhex(args.data.replace('0x', '').replace(',', ' '))
+    except ValueError:
+        print("\033[3;31mAddress or hexadecimal data is invalid!\033[0m")
+        return False
+
+    if not data or not telink_flash_write(_port, flash_addr, data):
+        print("\033[3;31mWrite Flash failed!\033[0m")
+        return False
+    print("\033[3;32mOK!\033[0m")
+    return True
+
 def read_flash(_port, args):
     flash_addr = int(args.addr, 0)
     bytes_len  = int(args.len,  0)
 
-    if bytes_len> 255:
-        print("\033[3;31mThe MAX read len is 255 bytes!\033[0m")
+    if bytes_len < 1 or bytes_len > 255 or flash_addr < 0 or flash_addr + bytes_len > FLASH_SIZE:
+        print("\033[3;31mRead range must be inside Flash and contain 1 to 255 bytes!\033[0m")
         return
 
     sys.stdout.write("Read Flash from " + args.addr + " " + args.len + " Bytes ... ... ")
@@ -215,7 +248,16 @@ def read_flash(_port, args):
         print("\033[3;31mFail!\033[0m")
 
 def burn(_port, args):
-    #  Try to change Baud to 921600 
+    if not os.path.isfile(args.filename):
+        print("\033[3;31mFirmware file does not exist!\033[0m")
+        return False
+
+    firmware_size = os.path.getsize(args.filename)
+    if firmware_size < 1 or firmware_size > MAX_FIRMWARE_SIZE:
+        print("\033[3;31mFirmware must be between 1 byte and 176 KB!\033[0m")
+        return False
+
+    # Try to change Baud to 921600
     sys.stdout.flush()
     change_baud(_port)
     sys.stdout.write("Start erase Flash at 0x4000 len 176 KB ... ")
@@ -223,55 +265,50 @@ def burn(_port, args):
 
     if not telink_flash_erase(_port, 0x4000, 44):
         print("\033[3;31mFail!\033[0m")
-        return
+        return False
     
     print("\033[3;32mOK!\033[0m\r\nBurn Firmware :"  + args.filename)
 
-    fo = open(args.filename, "rb")
     firmware_addr = 0
-    firmware_size = os.path.getsize(args.filename)
-
-    if firmware_size > 0x2c000:
-        print("\033[3;31mFirmware Too BIG!\033[0m")
-        fo.close()
-
     bar_len = 50
 
-    while True:
-        data = fo.read(256)
-        if len(data) < 1: break
+    with open(args.filename, "rb") as firmware:
+        while True:
+            data = firmware.read(256)
+            if len(data) < 1: break
 
-        if not telink_flash_write(_port, firmware_addr, data):
-            print("\033[3;31mBurn firmware Fail!\033[0m")
-            break
+            if not telink_flash_write(_port, firmware_addr, data):
+                print("\033[3;31mBurn firmware Fail!\033[0m")
+                return False
 
-        firmware_addr += len(data)
+            firmware_addr += len(data)
 
-        percent = (int)(firmware_addr *100 / firmware_size)
-        sys.stdout.write("\r" + str(percent) + "% [\033[3;32m{0}\033[0m{1}]".format(">"*(int)(percent*bar_len/100),"="*(bar_len-(int)(percent*bar_len/100))))
-        sys.stdout.flush()
+            percent = int(firmware_addr * 100 / firmware_size)
+            sys.stdout.write("\r" + str(percent) + "% [\033[3;32m{0}\033[0m{1}]".format(">"*int(percent*bar_len/100),"="*(bar_len-int(percent*bar_len/100))))
+            sys.stdout.flush()
 
     print("")
-    fo.close()
-    _port.close()
-
+    return True
 def burn_triad(_port, args):
-
-    data = struct.pack('<I', int(args.productID)) + bytearray.fromhex(args.MAC) + bytearray.fromhex(args.Secret)
+    try:
+        data = struct.pack('<I', int(args.productID)) + bytearray.fromhex(args.MAC) + bytearray.fromhex(args.Secret)
+    except (ValueError, struct.error):
+        print("\033[3;31mTriad Error!\033[0m")
+        return False
     if(len(data) != 26):
         print("\033[3;31mTriad Error!\033[0m")
-        return
+        return False
 
     print("Your productID =  " + args.productID )
     print("Your MAC =   " + args.MAC )
-    print("Your Secret =   " + args.Secret )
+    print("Your Secret =   [REDACTED]")
 
     sys.stdout.write("Erase Flash at 0x78000 len 4 KB ... ... ")
     sys.stdout.flush()
 
     if not telink_flash_erase(_port, 0x78000, 1):
         print("\033[3;31mFail!\033[0m")
-        return
+        return False
     print("\033[3;32mOK!\033[0m")
 
     sys.stdout.write("Burn Triad to 0x78000 ... ... ")
@@ -279,8 +316,9 @@ def burn_triad(_port, args):
 
     if not telink_flash_write(_port, 0x78000, data):
         print("\033[3;31mFail!\033[0m")
-        return
+        return False
     print("\033[3;32mOK!\033[0m")
+    return True
 
 def test(_port, args):
     while True:

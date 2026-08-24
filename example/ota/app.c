@@ -26,11 +26,21 @@
 
 #include "vendor/common/blt_led.h"
 #include "vendor/common/blt_common.h"
+#include "vendor/common/blt_soft_timer.h"
 #include "application/keyboard/keyboard.h"
 #include "application/usbstd/usbkeycode.h"
 #include "tinyFlash/tinyFlash.h"
 #include "tinyFlash_Index.h"
-#include "at_cmd.h"
+
+typedef struct {
+	u16 min_interval;
+	u16 max_interval;
+	u16 latency;
+	u16 timeout;
+} BLE_INTER;
+
+void at_print(char *str);
+void set_uart_mode(u8 enabled);
 #define 	ADV_IDLE_ENTER_DEEP_TIME			60  //60 s
 #define 	CONN_IDLE_ENTER_DEEP_TIME			60  //60 s
 
@@ -216,7 +226,7 @@ void app_switch_to_indirect_adv(u8 e, u8 *p, int n)
 
 void ble_remote_terminate(u8 e,u8 *p, int n) //*p is terminate reason
 {
-	u8 dis_log[50];
+	char dis_log[50];
 	device_in_connection_state = 0;
 	set_uart_mode(1);
 
@@ -252,11 +262,12 @@ _attribute_ram_code_ void user_set_rf_power (u8 e, u8 *p, int n)
 	rf_set_power_level_index (my_rf_power_array[user_rf_power_index]);
 }
 
-static unsigned char print_connect_state()
+static int print_connect_state(void)
 {
 	blc_att_requestMtuSizeExchange(BLS_CONN_HANDLE, 247);
 	blt_soft_timer_delete(print_connect_state);
 	at_print((unsigned char *)"\r\n+BLE_CONNECTED\r\n");
+	return -1;
 }
 
 void task_connect (u8 e, u8 *p, int n)
@@ -300,7 +311,6 @@ else
 
 void task_dle_exchange (u8 e, u8 *p, int n)
 {
-	ll_data_extension_t* dle_param = (ll_data_extension_t*)p;
 	/*printf("----- DLE exchange: -----\n");
 	printf("connEffectiveMaxRxOctets: %d\n", dle_param->connEffectiveMaxRxOctets);
 	printf("connEffectiveMaxTxOctets: %d\n", dle_param->connEffectiveMaxTxOctets);
@@ -647,7 +657,7 @@ void ble_slave_init_normal(void)
 	//   should re_stored) , so it must be done after battery check
 
 	u8 authpwd_len=4;
-	if(tinyFlash_Read(STORAGE_AUTHPWD,&AUTHPWD, &authpwd_len) == 0 && AUTHPWD!=0xffffffff) //设置了 或者设置后又不想用了
+	if(tinyFlash_Read(STORAGE_AUTHPWD, (unsigned char *)&AUTHPWD, &authpwd_len) == 0 && AUTHPWD!=0xffffffff) //设置了 或者设置后又不想用了
 	 {
 	 //	printf("smp init--------\r\n");
 		blc_smp_param_setBondingDeviceMaxNumber(SMP_BONDING_DEVICE_MAX_NUM);    //if not set, default is : SMP_BONDING_DEVICE_MAX_NUM
@@ -829,7 +839,7 @@ void ble_slave_init_normal(void)
 	{
 		my_scanRsp_len = 2;
 			u8 status;
-		if(tinyFlash_Read(STORAGE_ADVINTV, &user_adv_interval_ms, &my_scanRsp_len) == 0) //读取用户是否设置广播间隙
+		if(tinyFlash_Read(STORAGE_ADVINTV, (unsigned char *)&user_adv_interval_ms, &my_scanRsp_len) == 0) //读取用户是否设置广播间隙
 		{
 			u16  interval = user_adv_interval_ms * 16; //广播间隙的值等于 mS数 * 1.6
 			interval = (u16)(interval / 10);

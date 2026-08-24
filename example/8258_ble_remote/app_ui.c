@@ -137,7 +137,7 @@ static const u16 vk_consumer_map[16] = {
 
 			///////////////////// AUDIO initialization///////////////////
 			//buffer_mic set must before audio_init !!!
-			audio_config_mic_buf ( buffer_mic, TL_MIC_BUFFER_SIZE);
+			audio_config_mic_buf((unsigned short *)buffer_mic, TL_MIC_BUFFER_SIZE);
 
 			#if (BLE_DMIC_ENABLE)  //Dmic config
 

@@ -3,3 +3,5 @@ components/mesh
 example/mesh
 example/*/out
 study/*/out
+__pycache__/
+*.py[cod]

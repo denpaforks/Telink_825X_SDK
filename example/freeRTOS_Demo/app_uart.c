@@ -73,7 +73,7 @@ void app_uart_init(AT_BAUD baud)
 	//WaitMs(100);  //leave enough time for SWS_reset when power on
 
 	//note: dma addr must be set first before any other uart initialization! (confirmed by sihui)
-	uart_recbuff_init( (unsigned short *)my_fifo_wptr(&uart_rx_fifo), UART_DATA_LEN);
+	uart_recbuff_init((unsigned char *)my_fifo_wptr(&uart_rx_fifo), UART_DATA_LEN);
 
 	uart_gpio_set(UART_TX_PB1, UART_RX_PB7);// uart tx/rx pin set
 
