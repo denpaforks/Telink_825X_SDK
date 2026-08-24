@@ -72,7 +72,7 @@ void app_uart_init(AT_BAUD baud)
 	//WaitMs(100);  //leave enough time for SWS_reset when power on
 
 	//note: dma addr must be set first before any other uart initialization! (confirmed by sihui)
-	uart_recbuff_init( (unsigned short *)my_fifo_wptr(&uart_rx_fifo), UART_DATA_LEN);
+	uart_recbuff_init((unsigned char *)my_fifo_wptr(&uart_rx_fifo), UART_DATA_LEN);
 
 	gpio_set_func(UART_RX_PA0, AS_GPIO);//TB-02/TB-03F/TB-04
 	gpio_set_func(UART_RX_PB0, AS_GPIO);//TB-01
@@ -249,7 +249,7 @@ void at_send(char * data, u32 len)
 	}
 }
 
-void puts(char *s) { at_print(s); }
+int puts(const char *s) { at_print((char *)s); return 0; }
 
 
 extern u32 device_in_connection_state;
@@ -314,7 +314,7 @@ int into_uart_at_mode(uart_data_t * p)//1:uart data, 0:exit or into at mode
 //用户层UART循环收发数据
 void app_uart_loop()
 {
-  	  if(data = my_fifo_get(&uart_rx_fifo)) //从fifo中获取数据
+	  if((data = my_fifo_get(&uart_rx_fifo)) != NULL) //从fifo中获取数据
       {
 		p = (uart_data_t *)data;
 		if(into_uart_at_mode(p)==1)

@@ -318,7 +318,7 @@ static const u8 my_batCharVal[5] = {
 static const u8 my_OtaCharVal[19] = {
 	CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP,
 	U16_LO(OTA_CMD_OUT_DP_H), U16_HI(OTA_CMD_OUT_DP_H),
-	TELINK_SPP_DATA_OTA,
+	TELINK_SPP_DATA_OTA_BYTES,
 };
 
 

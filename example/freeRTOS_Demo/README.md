@@ -1,18 +1,15 @@
-# FreeRTOS 示例
+[![中文](https://img.shields.io/badge/中文-文档-blue)](README.zh.md)
 
-此示例工程演示了FreeRTOS任务创建及调度，需要使用FreeRTOS的可以参考此示例。
+# FreeRTOS example
 
-## 示例说明
+This TB-02 Kit example demonstrates task creation and scheduling with three tasks: RGB LED control, warm/cool LED control, and UART output.
 
-此示例基于 ```TB-02_Kit``` 开发板创建了三个任务，两个LED闪烁，一个串口输出。
+At runtime, the RGB LED blinks quickly, the warm/cool LED blinks slowly, and UART prints `Hello FreeRTOS!` once per second. Pressing `K_D2` toggles the RGB task's blinking state.
 
-运行后RGB灯快速闪烁，冷暖灯慢速闪烁。串口每秒输出一次```Hello FreeRTOS！```。
+The project `makefile` must select the RTOS library:
 
-按下开发板上的```K_D2```,RGB灯停止闪烁，再次按下后RGB灯回复闪烁。
+```make
+USE_FREE_RTOS = 1
+```
 
-## 配置说明
-
-必须在工程目录下的```makefile```文件中配置如下信息：
-
-    #如果使用RTOS，必须将这个设置为 1
-    USE_FREE_RTOS = 1
+`main()` creates the tasks and calls `vTaskStartScheduler()`. This project links `liblt_8258_rtos.a`; the library's internal implementation is not present as source.

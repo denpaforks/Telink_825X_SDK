@@ -209,12 +209,13 @@ int u_printf(const char *format, ...) {
 	static char my_printf_buff[1024] = { 0 };
 	char *out = &my_printf_buff[0];
 
-	extern void puts(char* s);
-	
+	extern int puts(const char *s);
+
 	va_list args;
 	va_start(args, format );
-	print(&out, format, args);
+	int written = print(&out, format, args);
 	puts(my_printf_buff);
+	return written;
 }
 
 int u_sprintf(char *out, const char *format, ...) {

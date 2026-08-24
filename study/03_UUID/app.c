@@ -29,6 +29,9 @@
 #include "vendor/common/blt_soft_timer.h"
 #include "vendor/common/blt_common.h"
 
+void app_uart_init(void);
+void at_print(char *str);
+
 //#define		MY_RF_POWER_INDEX	RF_POWER_P10p29dBm //  10.29 dbm 
 #define	MY_RF_POWER_INDEX	RF_POWER_P0p04dBm
 

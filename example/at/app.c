@@ -190,11 +190,12 @@ _attribute_ram_code_ void user_set_rf_power (u8 e, u8 *p, int n)
 	rf_set_power_level_index (my_rf_power_array[user_rf_power_index]);
 }
 
-static unsigned char print_connect_state()
+static int print_connect_state(void)
 {
 	blc_att_requestMtuSizeExchange(BLS_CONN_HANDLE, 247);
 	blt_soft_timer_delete(print_connect_state);
 	at_print((unsigned char *)"\r\n+BLE_CONNECTED\r\n");
+	return -1;
 }
 
 void task_connect (u8 e, u8 *p, int n)

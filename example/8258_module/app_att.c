@@ -90,7 +90,7 @@ static const  u8 my_OtaName[] 						= {'O', 'T', 'A'};
 
 ////////////////////// SPP ////////////////////////////////////
 static const u8 TelinkSppServiceUUID[16]	      	    = TELINK_SPP_UUID_SERVICE;
-static const u8 TelinkSppDataServer2ClientUUID[16]      = TELINK_SPP_DATA_SERVER2CLIENT;
+static const u8 TelinkSppDataServer2ClientUUID[16]      = {TELINK_SPP_DATA_SERVER2CLIENT};
 static const u8 TelinkSppDataClient2ServerUUID[16]      = TELINK_SPP_DATA_CLIENT2SERVER;
 
 
@@ -151,7 +151,7 @@ static const u8 TelinkSppDataServer2ClientCharVal[19] = {
 static const u8 TelinkSppDataClient2ServerCharVal[19] = {
 	CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP,
 	U16_LO(SPP_CLIENT_TO_SERVER_DP_H), U16_HI(SPP_CLIENT_TO_SERVER_DP_H),
-	TELINK_SPP_DATA_CLIENT2SERVER
+	TELINK_SPP_DATA_CLIENT2SERVER_BYTES
 };
 
 
@@ -159,7 +159,7 @@ static const u8 TelinkSppDataClient2ServerCharVal[19] = {
 static const u8 my_OtaCharVal[19] = {
 	CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP,
 	U16_LO(OTA_CMD_OUT_DP_H), U16_HI(OTA_CMD_OUT_DP_H),
-	TELINK_SPP_DATA_OTA
+	TELINK_SPP_DATA_OTA_BYTES
 };
 
 

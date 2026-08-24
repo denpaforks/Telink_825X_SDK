@@ -1,44 +1,50 @@
-# Linux 平台开发环境搭建
+[![中文](https://img.shields.io/badge/中文-文档-blue)](start_linux.zh.md)
 
-<label style="color:red">注意：Linux平台编译工具仅支持64Bit Linux操作系统</label>
+# Linux development environment
 
-## linux版本获取编译工具链
+The bundled TC32 compiler is a 64-bit Linux executable. A Debian/Ubuntu-style environment, including WSL2 Ubuntu, can run it.
 
-    wget http://shyboy.oss-cn-shenzhen.aliyuncs.com/readonly/tc32_gcc_v2.0.tar.bz2
+## Install host tools
 
-解压到opt文件夹 *(也可解压到其他文件夹)*
+```bash
+sudo apt-get update
+sudo apt-get install -y make python3 python3-pip bzip2 wget
+python3 -m pip install --user -r requirements.txt
+```
 
-    sudo tar -xvjf　tc32_gcc_v2.0.tar.bz2　-C /opt/
+## Install the TC32 toolchain
 
-添加工具链到环境变量(以解压到/opt为例)
+Download the archive over HTTPS:
 
-    export PATH=$PATH:/opt/tc32/bin
+```bash
+wget https://shyboy.oss-cn-shenzhen.aliyuncs.com/readonly/tc32_gcc_v2.0.tar.bz2
+echo "33b854be3e3db3dba4b4dacdda2cd4ea1c94dfd4d562864a095956de7991b430  tc32_gcc_v2.0.tar.bz2" | sha256sum -c -
+sudo tar -xjf tc32_gcc_v2.0.tar.bz2 -C /opt
+export PATH="/opt/tc32/bin:$PATH"
+```
 
-> 以上命令只在当前命令行生效，下次打开命令行再次复执行该命令，最好的办法是将以上命令添加到```~/.bashrc```文件的尾部，这样就不用每次都执行此命令了。
+Verify the compiler:
 
-测试是否搭建成功
+```bash
+tc32-elf-gcc -v
+```
 
-    tc32-elf-gcc -v
+The expected compiler identifies itself as `gcc version 4.5.1.tc32-elf-1.5 (Telink TC32 version 2.0 build)`.
 
-如果搭建成功将打印如下信息:
+## Build
 
-    Using built-in specs.
-    COLLECT_GCC=tc32-elf-gcc
-    COLLECT_LTO_WRAPPER=/opt/tc32/lib/gcc/tc32-elf/4.5.1.tc32-elf-1.5/lto-wrapper
-    Target: tc32-elf
-    Configured with: ../../gcc-4.5.1/configure --program-prefix=tc32-elf- --target=tc32-elf --prefix=/opt/tc32 --enable-languages=c --libexecdir=/opt/tc32/lib --with-gnu-as --with-gnu-ld --without-headers --disable-decimal-float --disable-nls --disable-mathvec --with-pkgversion='Telink TC32 version 2.0 build' --without-docdir --without-fp --without-tls --disable-shared --disable-threads --disable-libffi --disable-libquadmath --disable-libstdcxx-pch --disable-libmudflap --disable-libgomp --disable-libssp -v --without-docdir --enable-soft-float --with-newlib --with-gcc --with-gnu- --with-gmp=/opt/tc32/addontools --with-mpc=/opt/tc32/addontools --with-mpfr=/opt/tc32/addontools
-    Thread model: single
-    gcc version 4.5.1.tc32-elf-1.5 (Telink TC32 version 2.0 build) 
+Build one project:
 
-## 安装Python及其依赖
-烧录工具采用python语言编写，所以须确保你的电脑安装了python运行环境及所需依赖包pyserial
+```bash
+cd example/blink
+make clean
+make
+```
 
-查看你的电脑是否安装了Python
+Build all 18 discovered projects:
 
-    python -v
+```bash
+TC32_TOOLCHAIN_BIN=/opt/tc32/bin bash tools/build_all.sh
+```
 
-如果能输出python版本号，说明你的电脑已安装python，如果未安装，请自行安装。
-
-如果已正确安装Python，还需使用以下指令安装pyserial
-
-    pip install pyserial
+On WSL2, keep the repository in a path visible to WSL and pass the Linux mount path to `TC32_TOOLCHAIN_BIN` when the toolchain is stored on a Windows drive.

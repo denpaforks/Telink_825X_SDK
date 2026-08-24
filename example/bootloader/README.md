@@ -1,46 +1,33 @@
-# UART BOOT 简介
+[![中文](https://img.shields.io/badge/中文-文档-blue)](README.zh.md)
 
-## 目的
-8258 系列芯片不支持串口烧录，需要额外购买烧录器，要100多RMB。于是开发了串口烧录功能，节省烧录器的钱，有利于推广。
+# UART bootloader
 
-## 原理
-bootloader存放在Flash的前16KBytes。上电时这部分代码会检测SWS引脚的高低，根据不同的条件判断是进入烧录模式还是运行模式。
+TLSR8258 does not natively provide this repository's UART flashing flow. The Ai-Thinker bootloader occupies the first 16 KiB and selects bootloader or application behavior from the SWS pin at reset.
 
-芯片上电后，CPU自动将Flash的前16K数据(即BootLoader)复制到内存中，然后从0地址处才是运行。BootLoader根据SWS引脚的高低判断该进入那种模式。
+## Boot flow
 
-如果进入烧录模式，将会继续运行bootloader代码，等待用户烧录固件。
+- In download mode, the bootloader waits for UART commands.
+- In run mode, it copies the application's RAM-code mirror from flash address `0x2C000` to RAM address `0x0`, then starts the application.
 
-如果进入运行模式，将会把应用层代码的Ram code 从Flash的 0x2C000 地址复制到内存0x0中，然后从内存0x0地址启动应用层代码。
+## Flash layout
 
-## FLASH分布
+| Region | Address | Maximum | Content |
+| --- | --- | --- | --- |
+| Bootloader | `0x00000`–`0x03FFF` | 16 KiB | UART bootloader |
+| Application non-RAM code | `0x04000`–`0x2BFFF` | 160 KiB | Application text/data stored in place |
+| Application RAM-code mirror | `0x2C000`–`0x2FFFF` | 16 KiB | First 16 KiB of the normal application image |
 
-正常编译的固件数据分布：
+The host flash tool therefore maps application offsets below `0x4000` to the mirror at `0x2C000` and limits a firmware image to 176 KiB.
 
-|地址|0x0-0x4000|0x4000 - 0x30000|
-|----|----------|--------------|
-|大小|16KBytes|最大176KBytes|
-|内容|Ram Code|非 Ram Code|
+## UART frame
 
+Each command begins with a one-byte command, a two-byte parameter length, and parameters.
 
-加上BootLoader后的Flash分布;
+| Command | Operation | Parameters |
+| --- | --- | --- |
+| `0x00` | Read version | None |
+| `0x01` | Write flash | Address, checksum, data |
+| `0x02` | Read flash | Address, length |
+| `0x03` | Erase flash | Address, sector count |
 
-|地址|0x0-0x4000|0x4000 - 0x2C000|0x2C000 - 0x30000|
-|----|----------|--------------|-------------|
-|大小|16KBytes  |最大160KBytes  |16KBytes|
-|内容|BootLoader|非 Ram Code   |Ram Code|
-
-由上表可知，用户编译的固件在Flash中被拆分成了两部分，即将其前16KBytes的内容(Ram Code)放到了0x2C000的位置，非 Ram Code 存放地址不变。
-
-
-## 指令格式
-
-|第一字节|第二三字节|余下字节|
-|-------|---------|--------|
-|CMD|参数长度|参数|
-
-|指令|含义|参数|示例|备注|
-|----|----|---|---|----|
-|0x00|读取版本号|无|00 00 00|
-|0x01|写Flash|地址，校验及数据|01 01 05 00 00 40 00 xx [256 data]|向0x4000地址写256字节数据(不擦除)
-|0x02|读Flash|地址，长度|02 00 05 00 00 40 00 ff|读取0x4000地址的255个字节的数据|
-|0x03|擦除Flash|地址，擦除扇区数|03 00 05 00 00 80 00 24| 擦除0x8000起始的0x24个扇区的数据)
+Erasing and writing are destructive. Confirm the selected port, address range, device type, and presence of a compatible bootloader before use.

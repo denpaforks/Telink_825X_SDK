@@ -36,7 +36,7 @@ uart_data_t trans_buff = {0, {0,} };
 void app_uart_init(void)
 {
 	//note: dma addr must be set first before any other uart initialization! (confirmed by sihui)
-	uart_recbuff_init( (unsigned short *)&rec_buff, sizeof(rec_buff));
+	uart_recbuff_init((unsigned char *)&rec_buff, sizeof(rec_buff));
 
 	uart_gpio_set(UART_TX_PB1, UART_RX_PA0);// uart tx/rx pin set
 

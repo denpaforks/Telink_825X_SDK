@@ -47,7 +47,7 @@ ble_mac:ECFABC7032AD
 wifi_mac:ECFABC7032AE
 sdk_version:release/v1.0
 firmware_version:release/v1.0
-compile_time:Feb 14 2020 09:39:03
+build_version:sdk=3.4.0 firmware=0.8.0 at=0.2
 */
 extern _attribute_data_retention_ u8 mac_public[6];
 void my_printf()
@@ -58,7 +58,8 @@ void my_printf()
 	printf("OTA2\r\n");
 	#endif
 	printf("ble_mac:%02X%02X%02X%02X%02X%02X\r\n",mac_public[5],mac_public[4],mac_public[3],mac_public[2],mac_public[1],mac_public[0]);
-	printf("compile_time:%s %s\r\n",__DATE__,__TIME__);
+	printf("build_version:sdk=%s firmware=%s at=%s\r\n",
+		SDK_VERSION, FIRMWARE_VERSION, AT_VERSION);
 }
 _attribute_ram_code_ int main (void)    //must run in ramcode
 {
@@ -150,5 +151,3 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 	
 	}
 }
-
- 
