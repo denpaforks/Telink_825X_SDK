@@ -65,3 +65,8 @@ The repository contains proprietary Telink notices and precompiled libraries (`l
 ## Validation scope
 
 Automated checks compile all 18 discovered firmware projects and test host-side flash-tool logic without opening a serial device. Passing CI does not replace testing on the target board, RF qualification, power measurements, or production programming checks.
+
+## Acknowledgements
+
+Includes driver improvements, multi-page flash routines, JEDEC/UID flash helpers, and BLE API enhancements originally contributed by [pvvx](https://github.com/pvvx) in the [ATC_MiThermometer](https://github.com/pvvx/ATC_MiThermometer) project.
+
