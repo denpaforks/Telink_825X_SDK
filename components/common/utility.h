@@ -100,7 +100,7 @@
 #define foreach(i, n) 			for(int i = 0; i < (n); ++i)
 #define foreach_range(i, s, e) 	for(int i = (s); i < (e); ++i)
 #define foreach_arr(i, arr) 	for(int i = 0; i < ARRAY_SIZE(arr); ++i)
-//  round robbin foreach,   从上一个指定的点开始，遍历,  h 是一个静态变量或全局变量，要记住上一次的位置。h 初始值是n !!!
+//  round robbin foreach,   浠庝笂涓�涓寚瀹氱殑鐐瑰紑濮嬶紝閬嶅巻,  h 鏄竴涓潤鎬佸彉閲忔垨鍏ㄥ眬鍙橀噺锛岃璁颁綇涓婁竴娆＄殑浣嶇疆銆俬 鍒濆鍊兼槸n !!!
 #define foreach_hint(i, n, h) 	for(int i = 0, ++h, h=h<n?h:0; i < n; ++h, h=h<n?h:0)
 
 #define ARRAY_SIZE(a) 			(sizeof(a) / sizeof(*a))
@@ -114,6 +114,8 @@
 #define U32_BYTE1(a) (((a) >> 8) & 0xFF)
 #define U32_BYTE2(a) (((a) >> 16) & 0xFF)
 #define U32_BYTE3(a) (((a) >> 24) & 0xFF)
+
+unsigned char * str_bin2hex(unsigned char *d, unsigned char *s, int len);
 
 
 
